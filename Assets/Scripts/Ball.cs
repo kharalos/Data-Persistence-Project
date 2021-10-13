@@ -6,16 +6,17 @@ using UnityEngine;
 public class Ball : MonoBehaviour
 {
     private Rigidbody m_Rigidbody;
-
+    AudioSource audioSource;
     void Start()
     {
         m_Rigidbody = GetComponent<Rigidbody>();
+        audioSource = GetComponent<AudioSource>();
     }
     
     private void OnCollisionExit(Collision other)
     {
         var velocity = m_Rigidbody.velocity;
-        
+        audioSource.Play();
         //after a collision we accelerate a bit
         velocity += velocity.normalized * 0.01f;
         
@@ -25,6 +26,12 @@ public class Ball : MonoBehaviour
             velocity += velocity.y > 0 ? Vector3.up * 0.5f : Vector3.down * 0.5f;
         }
 
+        if(other.gameObject.name == "Paddle")
+        {
+            Vector3 paddlePos = other.transform.position;
+            velocity += (transform.position - paddlePos).normalized;
+            
+        }
         //max velocity
         if (velocity.magnitude > 3.0f)
         {

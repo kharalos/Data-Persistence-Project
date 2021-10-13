@@ -10,22 +10,31 @@ public class MainManager : MonoBehaviour
     public int LineCount = 6;
     public Rigidbody Ball;
 
-    public Text ScoreText;
-    public GameObject GameOverText;
+    public Text ScoreText,highScoreText;
+    public GameObject GameOverText,pausePanel;
     
     private bool m_Started = false;
     private int m_Points;
     
     private bool m_GameOver = false;
 
-    
+    public int brickCount;
+
     // Start is called before the first frame update
     void Start()
     {
+
+        Time.timeScale = 1;
+        ScoreText.text = $"{SavedDataHandler.Instance.playerName} - Score : {m_Points}";
+        LayBricks();
+        SetHighScore();
+    }
+    void LayBricks()
+    {
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
-        
-        int[] pointCountArray = new [] {1,1,2,2,5,5};
+
+        int[] pointCountArray = new[] { 1, 1, 2, 2, 5, 5 };
         for (int i = 0; i < LineCount; ++i)
         {
             for (int x = 0; x < perLine; ++x)
@@ -34,10 +43,10 @@ public class MainManager : MonoBehaviour
                 var brick = Instantiate(BrickPrefab, position, Quaternion.identity);
                 brick.PointValue = pointCountArray[i];
                 brick.onDestroyed.AddListener(AddPoint);
+                brickCount++;
             }
         }
     }
-
     private void Update()
     {
         if (!m_Started)
@@ -61,16 +70,42 @@ public class MainManager : MonoBehaviour
             }
         }
     }
-
+    public void ChangeScene(int sceneID)
+    {
+        SceneManager.LoadScene(sceneID);
+    }
     void AddPoint(int point)
     {
         m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
+        ScoreText.text = $"{SavedDataHandler.Instance.playerName} - Score : {m_Points}";
+        brickCount--;
+        if (brickCount==0)
+            LayBricks();
     }
 
     public void GameOver()
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+        if (SavedDataHandler.Instance.highScore < m_Points)
+        {
+            SavedDataHandler.Instance.highScore = m_Points;
+            SavedDataHandler.Instance.SaveHighScore();
+            SetHighScore();
+        }
+    }
+    public void SetHighScore()
+    {
+        highScoreText.text = $"Name: {SavedDataHandler.Instance.highScoreName} - Score : {SavedDataHandler.Instance.highScore}";
+    }
+    public void OpenPausePanel()
+    {
+        pausePanel.SetActive(true);
+        Time.timeScale = 0;
+    }
+    public void ClosePausePanel()
+    {
+        pausePanel.SetActive(false);
+        Time.timeScale = 1;
     }
 }
